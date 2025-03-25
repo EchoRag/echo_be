@@ -27,8 +27,6 @@ export class ProjectController {
    *                 type: string
    *               description:
    *                 type: string
-   *               price:
-   *                 type: number
    *               imageUrl:
    *                 type: string
    *               metadata:
@@ -36,11 +34,13 @@ export class ProjectController {
    */
   createProject = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const project = await this.projectService.createProject({
-        ...req.body,
-        user: { id: req.user?.id },
-      });
-      res.status(201).json(project);
+      if (req.body) {
+        const project = await this.projectService.createProject({
+          ...req.body,
+          user: { id: req.user?.id },
+        });
+        res.status(201).json(project);
+      }
     } catch (error) {
       next(error);
     }

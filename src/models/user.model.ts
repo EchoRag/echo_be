@@ -6,6 +6,9 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ unique: true, name: 'provider_uid' })
+  providerUid: string;
+
   @Column({ unique: true })
   email: string;
 
@@ -23,4 +26,4 @@ export class User {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
-} 
+}

@@ -27,8 +27,6 @@ export class ProjectController {
    *                 type: string
    *               description:
    *                 type: string
-   *               price:
-   *                 type: number
    *               imageUrl:
    *                 type: string
    *               metadata:

@@ -12,7 +12,6 @@ export const extractUser = async (req: Request, res: Response, next: NextFunctio
   } else {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-  console.log('User:', clerkUser);
   
   const userService = new UserService();
   const user = await userService.getUserMiddleware(clerkUser);

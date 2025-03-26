@@ -57,8 +57,12 @@ export class ProjectController {
    */
   getAllProjects = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const projects = await this.projectService.getAllProjects(req.user?.id || '');
-      res.json(projects);
+      if(req.user && req.user.id){
+        const projects = await this.projectService.getAllProjects(req.user?.id || '');
+        res.json(projects);
+      }else{
+        res.status(401).send({message: 'Unauthorized'});
+      }
     } catch (error) {
       next(error);
     }

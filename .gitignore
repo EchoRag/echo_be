@@ -24,3 +24,4 @@ dist/
 # Misc
 .DS_Store 
 coverage
+uploads/

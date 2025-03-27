@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from './user.model';
+import { Document } from './document.model';
 
 @Entity('projects')
 export class Project {
@@ -27,6 +28,9 @@ export class Project {
   @ManyToOne(() => User, (user) => user.projects)
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @OneToMany(() => Document, (document) => document.project)
+  documents: Document[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

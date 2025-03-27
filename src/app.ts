@@ -9,6 +9,7 @@ import { errorHandler } from './middlewares/error.middleware';
 import { rateLimiter } from './middlewares/rate-limit.middleware';
 import { authenticateUser, extractUser } from './middlewares/auth.middleware';
 import projectRoutes from './routes/project.routes';
+import documentRoutes from './routes/document.routes';
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use(extractUser);
 
 // Routes
 app.use('/api/v1/project', projectRoutes);
+app.use('/api/v1', documentRoutes);
 
 // Error handling
 app.use(errorHandler);

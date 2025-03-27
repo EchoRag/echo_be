@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { DocumentService } from '../services/document.service';
 import { AppError } from '../middlewares/error.middleware';
+import { RabbitMQService } from '../services/rabbitmq.service';
 
 // Extend the Request type to include the file property
 interface RequestWithFile extends Request {
@@ -9,6 +10,7 @@ interface RequestWithFile extends Request {
 
 export class DocumentController {
   private documentService = new DocumentService();
+  private rabbitMQService = new RabbitMQService();
 
   /**
    * @swagger
@@ -50,6 +52,9 @@ export class DocumentController {
         isCallTranscript: isCallTranscript === 'true',
         project,
       });
+
+      // Publish document ID to RabbitMQ
+      await this.rabbitMQService.publishMessage('document_uploaded', document.id);
 
       res.status(201).json(document);
     } catch (error) {

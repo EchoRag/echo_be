@@ -10,8 +10,10 @@ import { rateLimiter } from './middlewares/rate-limit.middleware';
 import { authenticateUser, extractUser } from './middlewares/auth.middleware';
 import projectRoutes from './routes/project.routes';
 import documentRoutes from './routes/document.routes';
+import { RabbitMQService } from './services/rabbitmq.service';
 
 const app = express();
+const rabbitMQService = new RabbitMQService();
 
 // Middleware
 app.use(helmet());
@@ -29,19 +31,34 @@ app.use(extractUser);
 
 // Routes
 app.use('/api/v1/project', projectRoutes);
-app.use('/api/v1/documents', documentRoutes);
-
+app.use('/api/v1', documentRoutes);
 
 // Error handling
 app.use(errorHandler);
 
-// Database connection
-AppDataSource.initialize()
-  .then(() => {
+// Initialize connections
+const initializeConnections = async () => {
+  try {
+    // Initialize database
+    await AppDataSource.initialize();
     console.log('Data Source has been initialized!');
-  })
-  .catch((error) => {
-    console.error('Error during Data Source initialization:', error);
-  });
+
+    // Initialize RabbitMQ
+    await rabbitMQService.connect();
+    console.log('RabbitMQ connection has been initialized!');
+
+    // Handle graceful shutdown
+    process.on('SIGTERM', async () => {
+      await rabbitMQService.close();
+      await AppDataSource.destroy();
+      process.exit(0);
+    });
+  } catch (error) {
+    console.error('Error during initialization:', error);
+    process.exit(1);
+  }
+};
+
+initializeConnections();
 
 export default app; 

@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { DocumentController } from '../controllers/document.controller';
-import { authenticateService, authenticateUser } from '../middlewares/auth.middleware';
+import { authenticateUser, extractUser,authenticateService } from '../middlewares/auth.middleware';
 import multer from 'multer';
+
 
 const router = Router();
 const documentController = new DocumentController();
@@ -18,18 +19,11 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Document routes
-router.post('/documents', 
-  authenticateUser, 
-  upload.single('file'), 
-  documentController.uploadDocument
-);
+// Apply authentication middleware to all routes
+router.use(authenticateUser);
+router.use(extractUser);
 
-router.get('/projects/:projectId/documents', 
-  authenticateUser, 
-  documentController.getAllDocuments
-);
-
+// Document Routes
 router.get('/documents/:id', 
   authenticateUser, 
   documentController.getDocumentById

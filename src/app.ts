@@ -26,8 +26,8 @@ app.use(rateLimiter);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Authentication
-app.use(authenticateUser);
-app.use(extractUser);
+// app.use(authenticateUser);
+// app.use(extractUser);
 
 // Routes
 app.use('/api/v1/project', projectRoutes);

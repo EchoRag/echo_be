@@ -2,6 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import { DocumentService } from '../services/document.service';
 import { AppError } from '../middlewares/error.middleware';
 import { RabbitMQService } from '../services/rabbitmq.service';
+import { Document } from 'src/models/document.model';
+import { getMimeType } from '../utils/mime-type.util';
+import fs from 'fs';
+import path from 'path';
 
 // Extend the Request type to include the file property
 interface RequestWithFile extends Request {
@@ -103,8 +107,25 @@ export class DocumentController {
    */
   getDocumentById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const document = await this.documentService.getDocumentById(req.params.id);
-      res.json(document);
+      const document: Document = await this.documentService.getDocumentById(req.params.id);
+      
+      // Check if file exists
+      if (!fs.existsSync(document.filePath)) {
+        throw new AppError(404, 'File not found');
+      }
+
+      // Set headers for file download
+      res.setHeader('Content-Type', getMimeType(document.fileName));
+      res.setHeader('Content-Disposition', `attachment; filename="${document.fileName}"`);
+      
+      // Stream the file
+      const fileStream = fs.createReadStream(document.filePath);
+      fileStream.pipe(res);
+
+      // Handle errors in the stream
+      fileStream.on('error', (error) => {
+        next(new AppError(500, 'Error reading file'));
+      });
     } catch (error) {
       next(error);
     }

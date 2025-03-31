@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { DocumentController } from '../controllers/document.controller';
-import { authenticateUser } from '../middlewares/auth.middleware';
+import { authenticateService, authenticateUser } from '../middlewares/auth.middleware';
 import multer from 'multer';
 
 const router = Router();
@@ -32,6 +32,10 @@ router.get('/projects/:projectId/documents',
 
 router.get('/documents/:id', 
   authenticateUser, 
+  documentController.getDocumentById
+);
+router.get('/document/:id', 
+  authenticateService, 
   documentController.getDocumentById
 );
 

@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Project } from './project.model';
+import { Conversation } from './conversation.model';
 
 @Entity('users')
 export class User {
@@ -20,6 +21,9 @@ export class User {
 
   @OneToMany(() => Project, (project) => project.user)
   projects: Project[];
+
+  @OneToMany(() => Conversation, (conversation) => conversation.user)
+  conversations: Conversation[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

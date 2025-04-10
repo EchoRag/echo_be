@@ -7,9 +7,10 @@ import { AppDataSource } from './config/database';
 import { swaggerSpec } from './config/swagger';
 import { errorHandler } from './middlewares/error.middleware';
 import { rateLimiter } from './middlewares/rate-limit.middleware';
-import { authenticateUser, extractUser } from './middlewares/auth.middleware';
+import { traceMiddleware } from './middlewares/tracing.middleware';
 import projectRoutes from './routes/project.routes';
 import documentRoutes from './routes/document.routes';
+import conversationRoutes from './routes/conversation.routes';
 import { RabbitMQService } from './services/rabbitmq.service';
 
 const app = express();
@@ -21,6 +22,7 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(rateLimiter);
+app.use(traceMiddleware);
 
 // Swagger Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -31,9 +33,10 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Routes
 app.use('/api/v1/project', projectRoutes);
-app.use('/api/v1', documentRoutes);
+app.use('/api/v1/document', documentRoutes);
+app.use('/api/v1/conversations', conversationRoutes);
 
-// Error handling
+// Error Handling
 app.use(errorHandler);
 
 // Initialize connections

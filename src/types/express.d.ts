@@ -10,6 +10,7 @@ declare global {
       user?: {
         id: string;
         email?: string;
+        providerUid?: string;
       };
     }
   }

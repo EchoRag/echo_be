@@ -19,6 +19,7 @@ export const extractUser = async (req: Request, res: Response, next: NextFunctio
   req.user = {
     id: user.id,
     email: user.email,
+    providerUid: user.providerUid,
   };
   next();
 };

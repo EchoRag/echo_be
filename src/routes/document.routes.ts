@@ -24,13 +24,13 @@ const upload = multer({ storage });
 // router.use(extractUser);
 
 // Document Routes
-router.post('/documents', 
+router.post('/', 
   authenticateUser, 
   extractUser,
   upload.single('file'), 
   documentController.uploadDocument
 );
-router.get('/documents/:id', 
+router.get('/:id', 
   authenticateUser, 
   documentController.getDocumentById
 );
@@ -39,12 +39,12 @@ router.get('/document/:id',
   documentController.getDocumentById
 );
 
-router.put('/documents/:id', 
+router.put('/:id', 
   authenticateUser, 
   documentController.updateDocument
 );
 
-router.delete('/documents/:id', 
+router.delete('/:id', 
   authenticateUser, 
   documentController.deleteDocument
 );

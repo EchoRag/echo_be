@@ -1,6 +1,12 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Project } from './project.model';
 
+export enum DocumentStatus {
+  PENDING = 'pending',
+  PROCESSED = 'processed',
+  ERROR = 'error'
+}
+
 @Entity('documents')
 export class Document {
   @PrimaryGeneratedColumn('uuid')
@@ -20,6 +26,16 @@ export class Document {
 
   @Column({ name: 'is_call_transcript', default: false })
   isCallTranscript: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: DocumentStatus,
+    default: DocumentStatus.PENDING
+  })
+  status: DocumentStatus;
+
+  @Column({ name: 'error_description', type: 'text', nullable: true })
+  errorDescription: string;
 
   @ManyToOne(() => Project, (project) => project.documents)
   @JoinColumn({ name: 'project_id' })

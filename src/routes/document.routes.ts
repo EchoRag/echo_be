@@ -1,8 +1,7 @@
 import { Router } from 'express';
 import { DocumentController } from '../controllers/document.controller';
-import { authenticateUser, extractUser,authenticateService } from '../middlewares/auth.middleware';
+import { authenticateUser, extractUser, authenticateService } from '../middlewares/auth.middleware';
 import multer from 'multer';
-
 
 const router = Router();
 const documentController = new DocumentController();
@@ -30,13 +29,25 @@ router.post('/',
   upload.single('file'), 
   documentController.uploadDocument
 );
+
+router.get('/project/:projectId', 
+  authenticateUser, 
+  documentController.getDocumentsByProject
+);
+
 router.get('/:id', 
   authenticateUser, 
   documentController.getDocumentById
 );
+
 router.get('/document/:id', 
   authenticateService, 
   documentController.getDocumentById
+);
+
+router.put('/:id/status', 
+  authenticateService, 
+  documentController.updateDocumentStatus
 );
 
 router.put('/:id', 

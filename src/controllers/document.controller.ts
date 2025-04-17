@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { DocumentService } from '../services/document.service';
 import { AppError } from '../middlewares/error.middleware';
 import { RabbitMQService } from '../services/rabbitmq.service';
-import { Document } from 'src/models/document.model';
+import { Document, DocumentStatus } from '../models/document.model';
 import { getMimeType } from '../utils/mime-type.util';
 import fs from 'fs';
 import path from 'path';
@@ -10,6 +10,11 @@ import path from 'path';
 // Extend the Request type to include the file property
 interface RequestWithFile extends Request {
   file?: Express.Multer.File;
+}
+
+interface UpdateStatusRequest {
+  status: DocumentStatus;
+  errorDescription?: string;
 }
 
 export class DocumentController {
@@ -183,6 +188,92 @@ export class DocumentController {
     try {
       await this.documentService.deleteDocument(req.params.id);
       res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * @swagger
+   * /api/v1/document/project/{projectId}:
+   *   get:
+   *     summary: Get all documents for a project
+   *     tags: [Documents]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: projectId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     responses:
+   *       200:
+   *         description: List of documents for the project
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/Document'
+   */
+  getDocumentsByProject = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { projectId } = req.params;
+      const documents = await this.documentService.getDocumentsByProject(projectId);
+      res.json(documents);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * @swagger
+   * /api/v1/document/{id}/status:
+   *   put:
+   *     summary: Update document status
+   *     tags: [Documents]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - status
+   *             properties:
+   *               status:
+   *                 type: string
+   *                 enum: [pending, processed, error]
+   *               errorDescription:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Document status updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Document'
+   */
+  updateDocumentStatus = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const { status, errorDescription } = req.body as UpdateStatusRequest;
+      
+      if (!Object.values(DocumentStatus).includes(status)) {
+        throw new AppError(400, 'Invalid status value');
+      }
+
+      const document = await this.documentService.updateDocumentStatus(id, status, errorDescription);
+      res.json(document);
     } catch (error) {
       next(error);
     }

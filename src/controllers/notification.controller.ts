@@ -3,7 +3,7 @@ import { NotificationService } from '../services/notification.service';
 import { AppError } from '../middlewares/error.middleware';
 
 export class NotificationController {
-  private notificationService = new NotificationService();
+  private notificationService = NotificationService.getInstance();
 
   /**
    * @swagger

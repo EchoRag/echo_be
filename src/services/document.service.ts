@@ -2,10 +2,12 @@ import { AppDataSource } from '../config/database';
 import { Document, DocumentStatus } from '../models/document.model';
 import { Project } from '../models/project.model';
 import { AppError } from '../middlewares/error.middleware';
+import { NotificationService } from './notification.service';
 
 export class DocumentService {
   private documentRepository = AppDataSource.getRepository(Document);
   private projectRepository = AppDataSource.getRepository(Project);
+  private notificationService = NotificationService.getInstance();
 
   async createDocument(data: Partial<Document>): Promise<Document> {
     const document = this.documentRepository.create(data);
@@ -44,7 +46,21 @@ export class DocumentService {
       document.errorDescription = errorDescription;
     }
 
-    return await this.documentRepository.save(document);
+    const updatedDocument = await this.documentRepository.save(document);
+
+    // Send notification about status change
+    this.notificationService.sendDocumentStatusNotification(
+      document.project.user.providerUid,
+      document.id,
+      document.project.id,
+      status,
+      errorDescription
+    ).catch(error => {
+      console.error('Error sending notification:', error);
+      return null;
+    });
+
+    return updatedDocument;
   }
 
   async updateDocument(id: string, data: Partial<Document>): Promise<Document> {

@@ -5,19 +5,28 @@ import { DeviceToken } from '../models/device-token.model';
 import { AppError } from '../middlewares/error.middleware';
 import * as admin from 'firebase-admin';
 import path from 'path';
+import { DocumentStatus } from '../models/document.model';
 
 export class NotificationService {
+  private static instance: NotificationService;
   private notificationRepository = AppDataSource.getRepository(Notification);
   private receiptRepository = AppDataSource.getRepository(NotificationReceipt);
   private deviceTokenRepository = AppDataSource.getRepository(DeviceToken);
   private firebaseAdmin: admin.app.App;
 
-  constructor() {
+  private constructor() {
     // Initialize Firebase Admin with service account file
     const serviceAccountPath = path.join(process.cwd(), 'service.json');
     this.firebaseAdmin = admin.initializeApp({
       credential: admin.credential.cert(serviceAccountPath)
     });
+  }
+
+  public static getInstance(): NotificationService {
+    if (!NotificationService.instance) {
+      NotificationService.instance = new NotificationService();
+    }
+    return NotificationService.instance;
   }
 
   async registerDeviceToken(
@@ -53,12 +62,57 @@ export class NotificationService {
     return await this.deviceTokenRepository.save(deviceToken);
   }
 
+  async sendDocumentStatusNotification(
+    userProviderUid: string,
+    documentId: string,
+    projectId: string,
+    status: DocumentStatus,
+    errorDescription?: string
+  ): Promise<Notification> {
+    let title: string;
+    let body: string;
+    let type: NotificationType;
+
+    switch (status) {
+      case DocumentStatus.PROCESSED:
+        title = 'Document Processed';
+        body = 'Your document has been successfully processed';
+        type = NotificationType.DOCUMENT_PROCESSED;
+        break;
+      case DocumentStatus.ERROR:
+        title = 'Document Processing Failed';
+        body = errorDescription || 'There was an error processing your document';
+        type = NotificationType.DOCUMENT_ERROR;
+        break;
+      default:
+        title = 'Document Status Updated';
+        body = `Your document status has been updated to ${status}`;
+        type = NotificationType.SYSTEM;
+    }
+
+    const data = {
+      documentId,
+      projectId,
+      status,
+      errorDescription,
+      link: `http://localhost:5173/project/${projectId}`
+    };
+
+    return this.sendNotification(
+      userProviderUid,
+      title,
+      body,
+      type,
+      data
+    );
+  }
+
   async sendNotification(
     userProviderUid: string,
     title: string,
     body: string,
     type: NotificationType = NotificationType.SYSTEM,
-    data?: Record<string, any>
+    data: Record<string, any> = {}
   ): Promise<Notification> {
     try {
       // Create notification record
@@ -69,7 +123,6 @@ export class NotificationService {
         data,
         userProviderUid,
       });
-      data.link = 'http://localhost:5173/project';
       await this.notificationRepository.save(notification);
 
       // Create receipt
@@ -101,13 +154,12 @@ export class NotificationService {
               ]
             },
             fcmOptions: {
-              link: data?.link || 'https://your-app.com'
+              link: data.link || 'http://localhost:5173'
             }
           },
           data: {
             notificationId: notification.id,
             type,
-            link: data?.link || '',
             ...data,
           },
         });

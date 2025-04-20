@@ -11,6 +11,7 @@ import { traceMiddleware } from './middlewares/tracing.middleware';
 import projectRoutes from './routes/project.routes';
 import documentRoutes from './routes/document.routes';
 import conversationRoutes from './routes/conversation.routes';
+import notificationRoutes from './routes/notification.routes';
 import { RabbitMQService } from './services/rabbitmq.service';
 
 const app = express();
@@ -35,6 +36,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api/v1/project', projectRoutes);
 app.use('/api/v1/document', documentRoutes);
 app.use('/api/v1/conversations', conversationRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
 
 // Error Handling
 app.use(errorHandler);

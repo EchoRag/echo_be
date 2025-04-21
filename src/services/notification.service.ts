@@ -2,7 +2,7 @@ import { AppDataSource } from '../config/database';
 import { Notification, NotificationType } from '../models/notification.model';
 import { NotificationReceipt } from '../models/notification-receipt.model';
 import { DeviceToken } from '../models/device-token.model';
-import { AppError } from '../middlewares/error.middleware';
+import { AppError } from '../utils/app-error';
 import * as admin from 'firebase-admin';
 import path from 'path';
 import { DocumentStatus } from '../models/document.model';

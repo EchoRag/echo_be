@@ -21,8 +21,9 @@ export const extractUser = async (req: Request, res: Response, next: NextFunctio
     email: user.email,
     providerUid: user.providerUid,
   };
-  next();
+  return next();
 };
+
 export const authenticateService = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
@@ -37,5 +38,5 @@ export const authenticateService = async (req: Request, res: Response, next: Nex
     return res.status(401).json({ error: 'Invalid service token' });
   }
 
-  next();
+  return next();
 };

@@ -8,10 +8,10 @@ const documentController = new DocumentController();
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: (_req, _file, cb) => {
     cb(null, 'uploads/');
   },
-  filename: (req, file, cb) => {
+  filename: (_req, file, cb) => {
     cb(null, file.originalname);
   }
 });

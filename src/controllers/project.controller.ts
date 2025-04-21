@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import { ProjectService } from '../services/project.service';
-import { AppError } from '../middlewares/error.middleware';
 
 export class ProjectController {
   private projectService = new ProjectService();

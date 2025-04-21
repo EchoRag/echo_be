@@ -41,7 +41,7 @@ const logger = winston.createLogger({
       filename: path.join(logDir, 'combined.log') 
     }),
     new LokiTransport({
-      host: process.env.LOKI_HOST ,
+      host: process.env.LOKI_HOST || 'http://localhost:3100',
       basicAuth: `${process.env.LOKI_USERNAME}:${process.env.LOKI_PASSWORD}`,
       labels: { 
         app: 'echo-be',

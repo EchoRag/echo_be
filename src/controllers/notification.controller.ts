@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { NotificationService } from '../services/notification.service';
-import { AppError } from '../middlewares/error.middleware';
+import { AppError } from '../utils/app-error';
 
 export class NotificationController {
   private notificationService = NotificationService.getInstance();

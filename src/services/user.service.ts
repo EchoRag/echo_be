@@ -1,6 +1,6 @@
 import { AppDataSource } from '../config/database';
 import { User } from '../models/user.model';
-// import { AppError } from '../middlewares/error.middleware';
+// import { AppError } from '../utils/app-error';
 import { User as ClerkUser } from '@clerk/express';
 export class UserService {
     private UserRepository = AppDataSource.getRepository(User);

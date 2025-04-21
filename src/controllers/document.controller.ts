@@ -1,11 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { DocumentService } from '../services/document.service';
-import { AppError } from '../middlewares/error.middleware';
+import { AppError } from '../utils/app-error';
 import { RabbitMQService } from '../services/rabbitmq.service';
 import { Document, DocumentStatus } from '../models/document.model';
 import { getMimeType } from '../utils/mime-type.util';
 import fs from 'fs';
-import path from 'path';
 
 // Extend the Request type to include the file property
 interface RequestWithFile extends Request {
@@ -88,7 +87,7 @@ export class DocumentController {
    */
   getAllDocuments = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const documents = await this.documentService.getAllDocuments(req.params.projectId);
+      const documents = await this.documentService.getDocumentsByProject(req.params.projectId);
       res.json(documents);
     } catch (error) {
       next(error);
@@ -128,7 +127,7 @@ export class DocumentController {
       fileStream.pipe(res);
 
       // Handle errors in the stream
-      fileStream.on('error', (error) => {
+      fileStream.on('error', (_error) => {
         next(new AppError(500, 'Error reading file'));
       });
     } catch (error) {

@@ -1,9 +1,9 @@
 import amqp from 'amqplib';
-import { AppError } from '../middlewares/error.middleware';
+import { AppError } from '../utils/app-error';
 
 export class RabbitMQService {
-  private connection: amqp.Connection | null = null;
-  private channel: amqp.Channel | null = null;
+  private connection: any | null = null;
+  private channel: any | null = null;
   private readonly url: string;
 
   constructor() {

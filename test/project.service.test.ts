@@ -2,7 +2,7 @@ import { ProjectService } from '../services/project.service';
 import { AppDataSource } from '../config/database';
 import { Project } from '../models/project.model';
 import { User } from '../models/user.model';
-import { AppError } from '../middlewares/error.middleware';
+import { AppError } from '../utils/app-error';
 
 describe('ProjectService', () => {
   let projectService: ProjectService;

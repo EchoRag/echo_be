@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ConversationService } from '../services/conversation.service';
-import { AppError } from '../middlewares/error.middleware';
+import { AppError } from '../utils/app-error';
 
 export class ConversationController {
   private conversationService = new ConversationService();

@@ -1,7 +1,7 @@
 import { AppDataSource } from '../config/database';
 import { Document, DocumentStatus } from '../models/document.model';
 import { Project } from '../models/project.model';
-import { AppError } from '../middlewares/error.middleware';
+import { AppError } from '../utils/app-error';
 import { NotificationService } from './notification.service';
 
 export class DocumentService {

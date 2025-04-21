@@ -1,6 +1,6 @@
 import { AppDataSource } from '../config/database';
 import { Project } from '../models/project.model';
-import { AppError } from '../middlewares/error.middleware';
+import { AppError } from '../utils/app-error';
 import logger from '../config/logger';
 
 export class ProjectService {

@@ -6,7 +6,7 @@ export const errorHandler = (
   error: Error,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) => {
   if (error instanceof AppError) {
     logger.warn(`AppError: ${error.message}`, {

@@ -7,13 +7,11 @@ import { AppDataSource } from './config/database';
 import { swaggerSpec } from './config/swagger';
 import { errorHandler } from './middlewares/error.middleware';
 import { rateLimiter } from './middlewares/rate-limit.middleware';
-import { traceMiddleware } from './middlewares/tracing.middleware';
 import { telemetryMiddleware } from './middlewares/telemetry.middleware';
 import projectRoutes from './routes/project.routes';
 import documentRoutes from './routes/document.routes';
 import conversationRoutes from './routes/conversation.routes';
 import notificationRoutes from './routes/notification.routes';
-import testRoutes from './routes/test.routes';
 import { RabbitMQService } from './services/rabbitmq.service';
 import logger from './config/logger';
 
@@ -41,7 +39,6 @@ app.use('/api/v1/project', projectRoutes);
 app.use('/api/v1/document', documentRoutes);
 app.use('/api/v1/conversations', conversationRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
-app.use('/api/v1/test', testRoutes);
 
 // Error Handling
 app.use(errorHandler);

@@ -15,8 +15,8 @@ export const AppDataSource = new DataSource({
   ssl: {
     ca: readFileSync(join(process.cwd(), 'ca.pem')).toString()
   },
-  synchronize: process.env.NODE_ENV === 'development',
-  logging: process.env.NODE_ENV === 'development',
+  synchronize: false, //process.env.NODE_ENV === 'development',
+  logging: false, //process.env.NODE_ENV === 'development',
   entities: ['src/models/**/*.ts'],
   migrations: ['src/migrations/**/*.ts'],
   subscribers: ['src/subscribers/**/*.ts'],

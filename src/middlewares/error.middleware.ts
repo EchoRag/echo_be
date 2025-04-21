@@ -1,34 +1,34 @@
 import { Request, Response, NextFunction } from 'express';
-
-export class AppError extends Error {
-  constructor(
-    public statusCode: number,
-    public message: string,
-    public isOperational = true
-  ) {
-    super(message);
-    Object.setPrototypeOf(this, AppError.prototype);
-  }
-}
+import { AppError } from '../utils/app-error';
+import logger from '../config/logger';
 
 export const errorHandler = (
-  err: Error | AppError,
+  error: Error,
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
+  if (error instanceof AppError) {
+    logger.warn(`AppError: ${error.message}`, {
+      statusCode: error.statusCode,
+      path: req.path,
+      method: req.method,
+    });
+    return res.status(error.statusCode).json({
       status: 'error',
-      message: err.message,
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+      message: error.message,
     });
   }
 
-  console.error('Error:', err);
+  logger.error('Unhandled error:', {
+    error: error.message,
+    stack: error.stack,
+    path: req.path,
+    method: req.method,
+  });
+
   return res.status(500).json({
     status: 'error',
     message: 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 }; 

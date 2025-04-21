@@ -1,6 +1,7 @@
 import { AppDataSource } from '../config/database';
 import { Project } from '../models/project.model';
 import { AppError } from '../middlewares/error.middleware';
+import logger from '../config/logger';
 
 export class ProjectService {
   private projectRepository = AppDataSource.getRepository(Project);
@@ -19,6 +20,7 @@ export class ProjectService {
   }
 
   async getAllProjects(userId: string): Promise<Project[]> {
+    logger.info(`Getting all projects for user ${userId}`);
     return await this.projectRepository.find({
       where: { user: { id: userId } },
       order: { createdAt: 'DESC' },

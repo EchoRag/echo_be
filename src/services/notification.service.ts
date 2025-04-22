@@ -16,7 +16,12 @@ export class NotificationService {
 
   private constructor() {
     // Initialize Firebase Admin with service account file
-    const serviceAccountPath = path.join(process.cwd(), 'service.json');
+    let serviceAccountPath;
+    if (process.env.firebase) {
+      serviceAccountPath = JSON.parse(process.env.firebase);
+    } else {
+      serviceAccountPath = path.join(process.cwd(), 'service.json');
+    }
     this.firebaseAdmin = admin.initializeApp({
       credential: admin.credential.cert(serviceAccountPath)
     });
@@ -135,7 +140,7 @@ export class NotificationService {
 
       // Get user's FCM token
       const fcmToken = await this.getUserFcmToken(userProviderUid);
-      
+
       if (fcmToken) {
         // Send web push notification
         await this.firebaseAdmin.messaging().send({
@@ -195,7 +200,7 @@ export class NotificationService {
     limit: number = 10
   ): Promise<{ notifications: Notification[]; total: number; page: number; limit: number }> {
     const skip = (page - 1) * limit;
-    
+
     const [notifications, total] = await this.notificationRepository.findAndCount({
       where: { userProviderUid },
       relations: ['receipts'],

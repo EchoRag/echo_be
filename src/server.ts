@@ -7,6 +7,10 @@ dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
+console.log(process.env.OTEL_EXPORTER_OTLP_ENDPOINT);
+console.log(process.env.OTEL_EXPORTER_OTLP_TOKEN);
+
+
 const startServer = async () => {
   try {
     // Initialize OpenTelemetry

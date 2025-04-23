@@ -10,9 +10,9 @@ const sdk = new NodeSDK({
   serviceName: process.env.OTEL_SERVICE_NAME || 'echo-be',
   traceExporter: new OTLPTraceExporter({
     url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
-    // headers: {
-    //   Authorization: `Basic ${process.env.OTEL_EXPORTER_OTLP_TOKEN}` || '',
-    // },
+    headers: {
+      Authorization: `Basic ${process.env.OTEL_EXPORTER_OTLP_token}` || '',
+    },
   }),
   instrumentations: [getNodeAutoInstrumentations()],
 });

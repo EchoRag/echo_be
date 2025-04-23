@@ -9,7 +9,13 @@
     "build": "tsc",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "predockerbuild": "npm run build",
+    "dockerbuild": "docker build --platform linux/x86_64 -t echo_be .",
+    "predockerTag": "npm run dockerbuild",
+    "dockerTag": "docker tag echo_be:latest 075310388474.dkr.ecr.ap-south-1.amazonaws.com/echo_be:latest",
+    "prepushAws": "npm run dockerTag",
+    "pushAws": "docker push 075310388474.dkr.ecr.ap-south-1.amazonaws.com/echo_be:latest"
   },
   "keywords": [],
   "author": "",

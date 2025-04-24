@@ -9,32 +9,6 @@ on:
         default: '0.1.0'
 
 jobs:
-  create-release:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out the code
-        uses: actions/checkout@v4
-
-      - name: Create Tag
-        run: |
-          git tag ${{ github.event.inputs.version }}
-          git push origin ${{ github.event.inputs.version }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.event.inputs.version }}
-        run: |
-          gh release create "$tag" \
-              --repo="$GITHUB_REPOSITORY" \
-              --generate-notes \
-              --prerelease
-
-      - name: Notify Completion
-        run: echo "Pre-release ${{ github.event.inputs.version }} created successfully."
   build:
     needs: ['create-release']
     runs-on: ubuntu-latest
@@ -72,3 +46,29 @@ jobs:
           npm version ${{ github.event.inputs.version }} --no-git-tag-version
           echo "Updated package version: $(npm pkg get version)"
           npm run pushGcp
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Create Tag
+        run: |
+          git tag ${{ github.event.inputs.version }}
+          git push origin ${{ github.event.inputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.event.inputs.version }}
+        run: |
+          gh release create "$tag" \
+              --repo="$GITHUB_REPOSITORY" \
+              --generate-notes \
+              --prerelease 
+      - name: Notify Completion
+        run: echo "Pre-release ${{ github.event.inputs.version }} created successfully."
+  

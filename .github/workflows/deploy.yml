@@ -25,15 +25,10 @@ jobs:
         uses: 'google-github-actions/setup-gcloud@v2'
         with:
           project_id: ${{ env.project }}
-
-      - name: Parse environment variables
-        id: env_vars
-        run: |
-          ENV_VARS=$(echo '${{ secrets.APP_ENV }}' | jq -r 'to_entries | map("--set-env-vars=" + .key + "=" + .value) | join(" ")')
-          echo "env_string=$ENV_VARS" >> $GITHUB_OUTPUT
   
       - name: Deploy to Cloud Run
         run: |
+          echo "$ENV_FILE" >> ./.env
           gcloud run deploy echo_be \
             --image asia-south1-docker.pkg.dev/echo-rag/echo/echo_be:${{ github.event.inputs.version }} \
             --memory=4Gi \
@@ -41,6 +36,8 @@ jobs:
             --region=asia-south1 \
             --min-instances=0 \
             --max-instances=4 \
-            ${{ steps.env_vars.outputs.env_string }} \
+            --env-vars-file=.env \
             --add-volume name=creds,type=cloud-storage,bucket=echo_creds \
             --add-volume-mount=volume=creds,mount-path=/creds 
+        env:
+          ENV_FILE: ${{ secrets.APP_ENV }}

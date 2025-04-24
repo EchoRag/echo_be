@@ -67,4 +67,8 @@ jobs:
         run: npm i
         
       - name: Push docker image
-        run: npm run pushGcp -- ${{ github.event.inputs.version }}
+        run: |
+          echo "Current package version: $(npm pkg get version)"
+          npm version ${{ github.event.inputs.version }} --no-git-tag-version
+          echo "Updated package version: $(npm pkg get version)"
+          npm run pushGcp

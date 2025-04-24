@@ -10,7 +10,6 @@ on:
 
 jobs:
   build:
-    needs: ['create-release']
     runs-on: ubuntu-latest
     env:
       project: ${{ secrets.PROJECT_ID }}
@@ -47,6 +46,7 @@ jobs:
           echo "Updated package version: $(npm pkg get version)"
           npm run pushGcp
   create-release:
+    needs: ['build']
     runs-on: ubuntu-latest
 
     steps:

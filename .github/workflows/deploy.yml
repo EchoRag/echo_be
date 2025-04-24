@@ -35,7 +35,7 @@ jobs:
             --cpu=1 \
             --region=asia-south1 \
             --min-instances=0 \
-            --max-instances=4 \
+            --max-instances=1 \
             --env-vars-file=.env \
             --add-volume name=creds,type=cloud-storage,bucket=echo_creds \
             --add-volume-mount=volume=creds,mount-path=/creds 

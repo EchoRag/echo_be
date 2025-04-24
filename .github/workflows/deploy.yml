@@ -36,8 +36,9 @@ jobs:
             --region=asia-south1 \
             --min-instances=0 \
             --max-instances=1 \
+            --allow-unauthenticated \
             --env-vars-file=.env \
             --add-volume name=creds,type=cloud-storage,bucket=echo_creds \
-            --add-volume-mount=volume=creds,mount-path=/creds 
+            --add-volume-mount=volume=creds,mount-path=/usr/app/creds
         env:
           ENV_FILE: ${{ secrets.APP_ENV }}

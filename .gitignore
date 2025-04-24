@@ -27,3 +27,4 @@ coverage
 uploads/
 ca.pem
 service.json
+env.json

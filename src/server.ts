@@ -11,28 +11,10 @@ const PORT = process.env.PORT || 3000;
 console.log(process.env.OTEL_EXPORTER_OTLP_ENDPOINT);
 console.log(process.env.OTEL_EXPORTER_OTLP_TOKEN);
 
-// const checkTelemetryEndpoint = async (): Promise<boolean> => {
-//   return new Promise((resolve) => {
-//     const req = http.get(process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318/v1/traces', (res) => {
-//       resolve(res.statusCode !== 404);
-//     });
-
-//     req.on('error', (error) => {
-//       console.log('Error checking telemetry endpoint:', error);
-//       resolve(false);
-//     });
-
-//     req.setTimeout(2000, () => {
-//       req.destroy();
-//       resolve(false);
-//     });
-//   });
-// };
-
 const startServer = async () => {
   try {
     // Check if telemetry endpoint is accessible
-    const isTelemetryAvailable =true;// await checkTelemetryEndpoint();
+    const isTelemetryAvailable = process.env.ENABLE_TELEMETRY === 'true';
 
     if (isTelemetryAvailable) {
       // Initialize OpenTelemetry only if endpoint is accessible

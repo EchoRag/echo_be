@@ -13,10 +13,10 @@ export const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   ssl: {
-    ca: process.env.DB_PEM || readFileSync(join(process.cwd(), 'ca.pem')).toString()
+    ca: process.env.DB_PEM || readFileSync(join(process.cwd(), 'creds', 'ca.pem')).toString()
   },
   synchronize: false, //process.env.NODE_ENV === 'development',
-  logging: false, //process.env.NODE_ENV === 'development',
+  logging: process.env.NODE_ENV === 'development',
   entities: [process.env.NODE_ENV === 'production' ? 'models/**/*.js' : 'src/models/**/*.ts'],
   migrations: [process.env.NODE_ENV === 'production' ? 'migrations/**/*.js' : 'src/migrations/**/*.ts'],
   subscribers: [process.env.NODE_ENV === 'production' ? 'subscribers/**/*.js' : 'src/subscribers/**/*.ts'],

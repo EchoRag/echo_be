@@ -20,7 +20,7 @@ export class NotificationService {
     if (process.env.firebase) {
       serviceAccountPath = JSON.parse(process.env.firebase);
     } else {
-      serviceAccountPath = path.join(process.cwd(), 'service.json');
+      serviceAccountPath = path.join(process.cwd(), 'creds', 'service.json');
     }
     this.firebaseAdmin = admin.initializeApp({
       credential: admin.credential.cert(serviceAccountPath)

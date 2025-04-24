@@ -1,0 +1,62 @@
+name: Deploy to Cloud Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version string for the deployment'
+        required: true
+        default: '0.1.0'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      project: ${{secrets.PROJECT_ID}}
+    steps:
+      - name: 'auth'
+        id: 'auth'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: ${{secrets.ECHO_GCA}}
+          project_id: ${{ env.project }}
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v2'
+        with:
+          project_id: ${{ env.project }}
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy echo_be \
+            --image asia-south1-docker.pkg.dev/echo-rag/echo/echo_be:${{ github.event.inputs.version }} \
+            --memory=4Gi \
+            --cpu=1 \
+            --region=asia-south1 \
+            --min-instances=0 \
+            --max-instances=4 \
+            --set-env-vars=PORT=3000 \
+            --set-env-vars=DB_HOST=${{secrets.DB_HOST}} \
+            --set-env-vars=DB_PORT=${{secrets.DB_PORT}} \
+            --set-env-vars=DB_USERNAME=${{secrets.DB_USERNAME}} \
+            --set-env-vars=DB_PASSWORD=${{secrets.DB_PASSWORD}} \
+            --set-env-vars=DB_DATABASE=${{secrets.DB_DATABASE}} \
+            --set-env-vars=RATE_LIMIT_WINDOW_MS=900000 \
+            --set-env-vars=RATE_LIMIT_MAX_REQUESTS=100 \
+            --set-env-vars=CLERK_SECRET_KEY=${{secrets.CLERK_SECRET_KEY}} \
+            --set-env-vars=CLERK_PUBLISHABLE_KEY=${{secrets.CLERK_PUBLISHABLE_KEY}} \
+            --set-env-vars=RABBITMQ_URL=${{secrets.RABBITMQ_URL}} \
+            --set-env-vars=SERVICE_TOKEN=${{secrets.SERVICE_TOKEN}} \
+            --set-env-vars=NODE_ENV=production \
+            --set-env-vars=OTEL_EXPORTER_OTLP_ENDPOINT=${{secrets.OTEL_EXPORTER_OTLP_ENDPOINT}} \
+            --set-env-vars=OTEL_EXPORTER_OTLP_token=${{secrets.OTEL_EXPORTER_OTLP_TOKEN}} \
+            --set-env-vars=OTEL_SERVICE_NAME=echo-be \
+            --set-env-vars=OTEL_TRACES_EXPORTER=otlp \
+            --set-env-vars=OTEL_SERVICE_VERSION=1.0.0 \
+            --set-env-vars=OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf \
+            --set-env-vars=OTEL_NODE_RESOURCE_DETECTORS=env,host,os,serviceinstance \
+            --set-env-vars=LOKI_HOST=https://logs-prod-028.grafana.net \
+            --set-env-vars=LOKI_USERNAME=${{secrets.LOKI_USERNAME}} \
+            --set-env-vars=LOKI_PASSWORD=${{secrets.LOKI_PASSWORD}} \
+            --set-env-vars=ENABLE_TELEMETRY=true \
+            --add-volume name=creds,type=cloud-storage,bucket=echo_creds \
+            --add-volume-mount=volume=creds,mount-path=/creds 

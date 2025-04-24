@@ -1,0 +1,69 @@
+name: Build and Push Docker Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version string for the deployment'
+        required: true
+        default: '0.1.0'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Create Tag
+        run: |
+          git tag ${{ github.event.inputs.version }}
+          git push origin ${{ github.event.inputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.event.inputs.version }}
+        run: |
+          gh release create "$tag" \
+              --repo="$GITHUB_REPOSITORY" \
+              --generate-notes \
+              --prerelease
+
+      - name: Notify Completion
+        run: echo "Pre-release ${{ github.event.inputs.version }} created successfully."
+  build:
+    needs: ['create-release']
+    runs-on: ubuntu-latest
+    env:
+      project: ${{ secrets.PROJECT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 'auth'
+        id: 'auth'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: ${{ secrets.ECHO_GCA }}
+          token_format: 'access_token'
+          project_id: ${{ env.project }}
+
+      - name: Login to Artifact Registry
+        uses: docker/login-action@v3
+        with:
+          registry: asia-south1-docker.pkg.dev
+          username: _json_key
+          password: ${{ secrets.ECHO_GCA }}
+
+      - id: docker-push-tagged
+        name: Tag Docker image and push to Google Artifact Registry
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: |
+             asia-south1-docker.pkg.dev/${{env.project}}/cloud-run-deploy/echo_be:${{ github.event.inputs.version }}
+             asia-south1-docker.pkg.dev/${{env.project}}/cloud-run-deploy/echo_be:latest

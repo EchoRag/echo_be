@@ -13,9 +13,9 @@
     "predockerbuild": "npm run build",
     "dockerbuild": "docker build --platform linux/x86_64 -t echo_be .",
     "predockerTag": "npm run dockerbuild",
-    "dockerTag": "docker tag echo_be:latest asia-south1-docker.pkg.dev/echo-rag/echo/echo_be:latest",
+    "dockerTag": "docker tag echo_be:latest asia-south1-docker.pkg.dev/echo-rag/echo/echo_be:${1:-latest}",
     "prepushGcp": "npm run dockerTag",
-    "pushGcp": "docker push asia-south1-docker.pkg.dev/echo-rag/echo/echo_be:latest"
+    "pushGcp": "docker push asia-south1-docker.pkg.dev/echo-rag/echo/echo_be:${1:-latest}"
   },
   "keywords": [],
   "author": "",

@@ -67,4 +67,4 @@ jobs:
         run: npm i
         
       - name: Push docker image
-        run: npm run pushGcp
+        run: npm run pushGcp -- ${{ github.event.inputs.version }}

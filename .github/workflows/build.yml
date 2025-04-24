@@ -65,15 +65,6 @@ jobs:
 
       - name: Install dependencies
         run: npm i
-
-      - name: Build application
-        run: npm run build
-      
-      - id: docker-push-tagged
-        name: Tag Docker image and push to Google Artifact Registry
-        uses: docker/build-push-action@v6
-        with:
-          push: true
-          tags: |
-             asia-south1-docker.pkg.dev/${{env.project}}/cloud-run-deploy/echo_be:${{ github.event.inputs.version }}
-             asia-south1-docker.pkg.dev/${{env.project}}/cloud-run-deploy/echo_be:latest
+        
+      - name: Push docker image
+        run: npm run pushGcp

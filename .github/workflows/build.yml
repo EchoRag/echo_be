@@ -58,7 +58,17 @@ jobs:
           registry: asia-south1-docker.pkg.dev
           username: _json_key
           password: ${{ secrets.ECHO_GCA }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
+      - name: Install dependencies
+        run: npm i
+
+      - name: Build application
+        run: npm run build
+      
       - id: docker-push-tagged
         name: Tag Docker image and push to Google Artifact Registry
         uses: docker/build-push-action@v6

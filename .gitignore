@@ -27,4 +27,4 @@ coverage
 uploads/
 ca.pem
 service.json
-env.json
+env.yaml

@@ -29,9 +29,9 @@ jobs:
       - name: Deploy to Cloud Run
         run: |
           echo "$ENV_FILE" >> ./.env
-          gcloud run deploy echo_be \
+          gcloud run deploy echo-be \
             --image asia-south1-docker.pkg.dev/echo-rag/echo/echo_be:${{ github.event.inputs.version }} \
-            --memory=4Gi \
+            --memory=512Mi \
             --cpu=1 \
             --region=asia-south1 \
             --min-instances=0 \

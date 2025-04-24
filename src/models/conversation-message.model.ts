@@ -22,6 +22,12 @@ export class ConversationMessage {
   @Column({ type: 'jsonb', nullable: true })
   embedding: number[];
 
+  @Column({ type: 'integer', default: 0 })
+  upvotes: number;
+
+  @Column({ type: 'integer', default: 0 })
+  downvotes: number;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 } 

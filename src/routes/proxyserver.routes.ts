@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { ProxyServerController } from '../controllers/proxyserver.controller';
-import { authenticateService, authenticateUser, extractUser } from '../middlewares/auth.middleware';
+import { authenticateService } from '../middlewares/auth.middleware';
 
 const router = Router();
 const proxyServerController = new ProxyServerController();

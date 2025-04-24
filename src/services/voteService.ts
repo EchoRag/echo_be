@@ -3,7 +3,6 @@ import { MessageVote } from '../models/MessageVote';
 import { ConversationMessage } from '../models/ConversationMessage';
 
 export class VoteService {
-    private messageRepository = AppDataSource.getRepository(ConversationMessage);
     private voteRepository = AppDataSource.getRepository(MessageVote);
 
     async voteMessage(messageId: string, userProviderUid: string, voteType: 'upvote' | 'downvote'): Promise<{ upvotes: number; downvotes: number }> {

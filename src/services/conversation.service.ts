@@ -2,11 +2,22 @@ import { AppDataSource } from '../config/database';
 import { Conversation } from '../models/conversation.model';
 import { ConversationMessage } from '../models/conversation-message.model';
 import { MessageVote } from '../models/MessageVote';
+import { EchoConfig } from '../models/echo-config.model';
+import axios from 'axios';
+
+interface GenerateRequest {
+  prompt: string;
+  model: string;
+  max_tokens: number;
+  temperature: number;
+  conversation_id: string;
+}
 
 export class ConversationService {
   private conversationRepository = AppDataSource.getRepository(Conversation);
   private messageRepository = AppDataSource.getRepository(ConversationMessage);
   private voteRepository = AppDataSource.getRepository(MessageVote);
+  private echoConfigRepository = AppDataSource.getRepository(EchoConfig);
 
   async getConversationsByUser(userProviderUid: string): Promise<Conversation[]> {
     const conversations = await this.conversationRepository.find({
@@ -81,6 +92,37 @@ export class ConversationService {
       throw error;
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  async generateResponse(request: GenerateRequest, authHeader: string): Promise<any> {
+    // Get the active LLM server configuration
+    const config = await this.echoConfigRepository.findOne({
+      where: { isActive: true }
+    });
+
+    if (!config) {
+      throw new Error('No active LLM server configuration found');
+    }
+
+    try {
+      const response = await axios.post(
+        `${config.llmServerUrl}/generate`,
+        request,
+        {
+          headers: {
+            'Authorization': authHeader,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(`LLM server error: ${error.response?.data?.message || error.message}`);
+      }
+      throw error;
     }
   }
 } 

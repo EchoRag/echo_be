@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDat
 import { Conversation } from './Conversation';
 import { MessageVote } from './MessageVote';
 
-@Entity('conversation_messages')
+@Entity('conversation_messages',{ synchronize: false })
 export class ConversationMessage {
     @PrimaryGeneratedColumn('uuid')
     id: string;

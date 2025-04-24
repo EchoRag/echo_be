@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { ConversationMessage } from './ConversationMessage';
 
-@Entity('conversations')
+@Entity('conversations',{ synchronize: false })
 export class Conversation {
     @PrimaryGeneratedColumn('uuid')
     id: string;

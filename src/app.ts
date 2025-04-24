@@ -12,6 +12,7 @@ import projectRoutes from './routes/project.routes';
 import documentRoutes from './routes/document.routes';
 import conversationRoutes from './routes/conversation.routes';
 import notificationRoutes from './routes/notification.routes';
+import proxyServerRoutes from './routes/proxyserver.routes';
 import { RabbitMQService } from './services/rabbitmq.service';
 import logger from './config/logger';
 
@@ -41,6 +42,7 @@ app.use('/api/v1/project', projectRoutes);
 app.use('/api/v1/document', documentRoutes);
 app.use('/api/v1/conversations', conversationRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/proxy-server', proxyServerRoutes);
 
 // Error Handling
 app.use(errorHandler);

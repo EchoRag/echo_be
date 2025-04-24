@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
 import { ConversationMessage } from './ConversationMessage';
 
-@Entity('message_votes')
+@Entity('message_votes',{ synchronize: false })
 export class MessageVote {
     @PrimaryGeneratedColumn('uuid')
     id: string;

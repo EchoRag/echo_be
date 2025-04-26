@@ -100,7 +100,7 @@ export class NotificationService {
       projectId,
       status,
       errorDescription,
-      link: `${process.env.FE_URL}/project/${projectId}`
+      link: `${process.env.FE_URL}/projects/${projectId}`
     };
 
     return this.sendNotification(

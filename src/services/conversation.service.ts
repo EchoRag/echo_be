@@ -149,7 +149,7 @@ export class ConversationService {
       {
         type: 'request_queued',
         conversationId,
-        link: `${process.env.FE_URL}/conversation/${conversationId}`
+        link: `${process.env.FE_URL}/chat/${conversationId}`
       }
     );
   }
@@ -163,7 +163,7 @@ export class ConversationService {
       {
         type: 'response_ready',
         conversationId,
-        link: `${process.env.FE_URL}/conversation/${conversationId}`
+        link: `${process.env.FE_URL}/chat/${conversationId}`
       }
     );
   }

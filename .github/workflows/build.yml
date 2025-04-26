@@ -39,6 +39,21 @@ jobs:
       - name: Install dependencies
         run: npm i
         
+      - name: Bump version
+        run: |
+          CURRENT_VERSION=$(npm pkg get version | tr -d '"')
+          NEW_VERSION=${{ github.event.inputs.version }}
+          echo "Current version: $CURRENT_VERSION"
+          echo "New version: $NEW_VERSION"
+          
+          if [ "$CURRENT_VERSION" != "$NEW_VERSION" ]; then
+            echo "Versions differ, updating to $NEW_VERSION"
+            npm version $NEW_VERSION --no-git-tag-version
+            echo "Updated package version: $(npm pkg get version)"
+          else
+            echo "Versions are the same, skipping version bump"
+          fi
+
       - name: Push docker image
         run: |
           echo "Current package version: $(npm pkg get version)"

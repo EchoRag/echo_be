@@ -3,11 +3,15 @@ import { Document, DocumentStatus } from '../models/document.model';
 import { Project } from '../models/project.model';
 import { AppError } from '../utils/app-error';
 import { NotificationService } from './notification.service';
+import { StorageService } from './storage.service';
+import path from 'path';
+import fs from 'fs';
 
 export class DocumentService {
   private documentRepository = AppDataSource.getRepository(Document);
   private projectRepository = AppDataSource.getRepository(Project);
   private notificationService = NotificationService.getInstance();
+  private storageService = StorageService.getInstance();
 
   async createDocument(data: Partial<Document>): Promise<Document> {
     const document = this.documentRepository.create(data);
@@ -75,6 +79,13 @@ export class DocumentService {
 
   async deleteDocument(id: string): Promise<void> {
     const document = await this.getDocumentById(id);
+    
+    // Delete file from Google Cloud Storage
+    if (document.filePath) {
+      const fileName = path.basename(document.filePath);
+      await this.storageService.deleteFile(fileName);
+    }
+    
     await this.documentRepository.remove(document);
   }
 
@@ -84,5 +95,23 @@ export class DocumentService {
       throw new AppError(404, 'Project not found');
     }
     return project;
+  }
+
+  async uploadFile(filePath: string, fileName: string): Promise<string> {
+    try {
+      // Upload to Google Cloud Storage
+      const publicUrl = await this.storageService.uploadFile(filePath, fileName);
+      return publicUrl;
+    } catch (error) {
+      // Clean up local file if upload fails
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      throw error;
+    }
+  }
+
+  async getSignedUrl(fileName: string): Promise<string> {
+    return await this.storageService.getSignedUrl(fileName);
   }
 } 

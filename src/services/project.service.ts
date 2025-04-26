@@ -5,17 +5,12 @@ import { AppError } from '../utils/app-error';
 import logger from '../config/logger';
 import fs from 'fs';
 import path from 'path';
+import { In } from 'typeorm';
 
 export class ProjectService {
   private projectRepository = AppDataSource.getRepository(Project);
   private documentRepository = AppDataSource.getRepository(Document);
 
-  
-  constructor() {
-    if (!this.projectRepository) {
-      console.log('Project repository not initialized');
-    }
-  }
 
   async createProject(data: Partial<Project>): Promise<Project> {
     const project = this.projectRepository.create(data);
@@ -65,7 +60,7 @@ export class ProjectService {
                     logger.error('Error deleting file:', err);
                   } else {
                     logger.info('File deleted successfully:', filePath);
-                    console.log(`File ${filePath} deleted successfully from local storage.`);
+  
                   }
                 });
               } else {
@@ -77,28 +72,28 @@ export class ProjectService {
           }
         }
       }
-
-      // Delete the documents from the database
-      await Promise.all(
-        project.documents.map(async (document) => {
-          try {
-            await this.documentRepository.remove(document);
-            logger.info(`Document deleted from database: ${document.id}`);
-          } catch (err) {
-            logger.error('Error deleting document from database:', err);
-          }
-        })
-      );
+      // Deleting all the documents in a single query
+      const documentIds= project.documents.map(document=>document.id);
+      try {
+        await this.documentRepository.delete({
+          id: In(documentIds), // Deletes all documents whose Ids are in the array
+        });
+        logger.info(`Documents deleted from database: ${documentIds.join(', ')}`);
+      } catch (err) {
+        logger.error('Error deleting documents from database:', err);
+      }
     }
+  
+
 
     // Try deleting the project from the database
     try {
       await this.projectRepository.remove(project);
       logger.info(`Project deleted from database: ${project.id}`);
-      console.log('Project deleted from database');
+      
     } catch (error) {
       logger.error('Error deleting project from database:', error);
-      console.log('Error deleting project:', error);
+      
     }
   }
 }

@@ -3,6 +3,8 @@ import { DocumentService } from '../services/document.service';
 import { AppError } from '../utils/app-error';
 import { RabbitMQService } from '../services/rabbitmq.service';
 import { Document, DocumentStatus } from '../models/document.model';
+import { getMimeType } from '../utils/mime-type.util';
+
 // Extend the Request type to include the file property
 interface RequestWithFile extends Request {
   file?: Express.Multer.File;
@@ -117,13 +119,19 @@ export class DocumentController {
     try {
       const document: Document = await this.documentService.getDocumentById(req.params.id);
       
-      // Get signed URL for the file
-      const signedUrl = await this.documentService.getSignedUrl(document.fileName);
+      // Set headers for file download
+      res.setHeader('Content-Type', getMimeType(document.fileName));
+      res.setHeader('Content-Disposition', `attachment; filename="${document.fileName}"`);
       
-      res.json({
-        ...document,
-        downloadUrl: signedUrl
-      });
+      // Stream the file from Google Cloud Storage
+      const bucket = this.documentService.getStorageBucket();
+      const file = bucket.file(document.fileName);
+      
+      file.createReadStream()
+        .on('error', (error: Error) => {
+          next(new AppError(500, `Error streaming file: ${error.message}`));
+        })
+        .pipe(res);
     } catch (error) {
       next(error);
     }

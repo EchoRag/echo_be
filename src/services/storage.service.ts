@@ -80,4 +80,8 @@ export class StorageService {
       throw new AppError(500, `Failed to generate signed URL: ${error.message}`);
     }
   }
+
+  getBucket() {
+    return this.storage.bucket(this.bucket);
+  }
 } 

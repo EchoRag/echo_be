@@ -114,4 +114,8 @@ export class DocumentService {
   async getSignedUrl(fileName: string): Promise<string> {
     return await this.storageService.getSignedUrl(fileName);
   }
+
+  getStorageBucket() {
+    return this.storageService.getBucket();
+  }
 } 

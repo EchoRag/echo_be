@@ -1,6 +1,6 @@
 {
   "name": "echo_be",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Echo Backend Service",
   "main": "dist/server.js",
   "scripts": {

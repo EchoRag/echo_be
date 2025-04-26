@@ -38,8 +38,7 @@ export class StorageService {
       const uniqueFileName = `${uuidv4()}${fileExtension}`;
       
       const bucket = this.storage.bucket(this.bucket);
-      const blob = bucket.file(uniqueFileName);
-      
+      bucket.file(uniqueFileName);
       await bucket.upload(filePath, {
         destination: uniqueFileName,
         metadata: {

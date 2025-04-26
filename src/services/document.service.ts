@@ -57,6 +57,7 @@ export class DocumentService {
       document.id,
       document.project.id,
       status,
+      document.fileName,
       errorDescription
     ).catch(error => {
       console.error('Error sending notification:', error);

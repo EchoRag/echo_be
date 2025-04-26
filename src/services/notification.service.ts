@@ -72,6 +72,7 @@ export class NotificationService {
     documentId: string,
     projectId: string,
     status: DocumentStatus,
+    documentName: string,
     errorDescription?: string
   ): Promise<Notification> {
     let title: string;
@@ -81,7 +82,7 @@ export class NotificationService {
     switch (status) {
       case DocumentStatus.PROCESSED:
         title = 'Document Processed';
-        body = 'Your document has been successfully processed';
+        body = `"${documentName}" has been successfully processed`;
         type = NotificationType.DOCUMENT_PROCESSED;
         break;
       case DocumentStatus.ERROR:
@@ -91,7 +92,7 @@ export class NotificationService {
         break;
       default:
         title = 'Document Status Updated';
-        body = `Your document status has been updated to ${status}`;
+        body = `"${documentName}" status has been updated to ${status}`;
         type = NotificationType.SYSTEM;
     }
 

@@ -100,7 +100,7 @@ export class NotificationService {
       projectId,
       status,
       errorDescription,
-      link: `http://localhost:5173/project/${projectId}`
+      link: `${process.env.FE_URL}/project/${projectId}`
     };
 
     return this.sendNotification(
@@ -149,8 +149,8 @@ export class NotificationService {
             notification: {
               title,
               body,
-              icon: 'https://your-app.com/icon.png',
-              badge: 'https://your-app.com/badge.png',
+              // icon: 'https://your-app.com/icon.png',
+              // badge: 'https://your-app.com/badge.png',
               actions: [
                 {
                   action: 'open',
@@ -159,13 +159,13 @@ export class NotificationService {
               ]
             },
             fcmOptions: {
-              link: data.link || 'http://localhost:5173'
+              link: data.link || `${process.env.FE_URL}`
             }
           },
           data: {
             notificationId: notification.id,
-            type,
-            ...data,
+            // type,
+            // ...data,
           },
         });
       }

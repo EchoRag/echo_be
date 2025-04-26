@@ -15,7 +15,10 @@ export class DocumentService {
   }
 
   async getDocumentById(id: string): Promise<Document> {
-    const document = await this.documentRepository.findOne({ where: { id } });
+    const document = await this.documentRepository.findOne({ 
+      where: { id },
+      relations: ['project', 'project.user']
+    });
     if (!document) {
       throw new AppError(404, 'Document not found');
     }

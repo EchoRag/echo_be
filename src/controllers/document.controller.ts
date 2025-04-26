@@ -272,7 +272,17 @@ export class DocumentController {
       }
 
       const document = await this.documentService.updateDocumentStatus(id, status, errorDescription);
+      
+      // Send response immediately
       res.json(document);
+
+      // Process queued requests in the background
+      if (status === DocumentStatus.PROCESSED) {
+        this.rabbitMQService.publishMessage('document_processed', document.id)
+          .catch(error => {
+            console.error('Error publishing document processed message:', error);
+          });
+      }
     } catch (error) {
       next(error);
     }

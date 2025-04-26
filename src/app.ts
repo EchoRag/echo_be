@@ -19,9 +19,17 @@ import logger from './config/logger';
 const app = express();
 const rabbitMQService = new RabbitMQService();
 
+// CORS configuration
+const corsOptions = {
+  origin: ['http://localhost:5173', 'https://echo.keithfranklin.xyz'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  // allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+};
+
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(rateLimiter);

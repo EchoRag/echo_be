@@ -3,8 +3,10 @@ import { Project } from './project.model';
 
 export enum DocumentStatus {
   PENDING = 'pending',
+  PROCESSING = 'processing',
   PROCESSED = 'processed',
-  ERROR = 'error'
+  ERROR = 'error',
+  FAILED = 'failed'
 }
 
 @Entity('documents')

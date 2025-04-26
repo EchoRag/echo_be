@@ -3,6 +3,7 @@ import { AppError } from '../utils/app-error';
 import path from 'path';
 import fs from 'fs';
 import { getMimeType } from '../utils/mime-type.util';
+import { v4 as uuidv4 } from 'uuid';
 
 export class StorageService {
   private static instance: StorageService;
@@ -31,23 +32,26 @@ export class StorageService {
     return StorageService.instance;
   }
 
-  async uploadFile(filePath: string, fileName: string): Promise<string> {
+  async uploadFile(filePath: string, originalFileName: string): Promise<string> {
     try {
+      const fileExtension = path.extname(originalFileName);
+      const uniqueFileName = `${uuidv4()}${fileExtension}`;
+      
       const bucket = this.storage.bucket(this.bucket);
-      const blob = bucket.file(fileName);
+      const blob = bucket.file(uniqueFileName);
       
       await bucket.upload(filePath, {
-        destination: fileName,
+        destination: uniqueFileName,
         metadata: {
-          contentType: getMimeType(fileName)
+          contentType: getMimeType(originalFileName)
         }
       });
       
       // Delete the local file after upload
       fs.unlinkSync(filePath);
       
-      // Return the file name for future signed URL generation
-      return fileName;
+      // Return the unique file name for future signed URL generation
+      return uniqueFileName;
     } catch (error) {
       throw new AppError(500, `Failed to upload file to Google Cloud Storage: ${error.message}`);
     }

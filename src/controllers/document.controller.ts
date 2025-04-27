@@ -4,7 +4,6 @@ import { AppError } from '../utils/app-error';
 import { RabbitMQService } from '../services/rabbitmq.service';
 import { Document, DocumentStatus } from '../models/document.model';
 import { getMimeType } from '../utils/mime-type.util';
-import fs from 'fs';
 
 // Extend the Request type to include the file property
 interface RequestWithFile extends Request {
@@ -52,9 +51,16 @@ export class DocumentController {
 
       const { fileName, isCallRecording, isCallTranscript, projectId } = req.body;
       const project = await this.documentService.getProjectById(projectId);
+
+      // Upload file to Google Cloud Storage
+      const fileUrl = await this.documentService.uploadFile(
+        file.path,
+        fileName || file.originalname
+      );
+
       const document = await this.documentService.createDocument({
         fileName: fileName || file.originalname,
-        filePath: file.path,
+        filePath: fileUrl,
         description: req.body.description,
         isCallRecording: isCallRecording === 'true',
         isCallTranscript: isCallTranscript === 'true',
@@ -113,23 +119,19 @@ export class DocumentController {
     try {
       const document: Document = await this.documentService.getDocumentById(req.params.id);
       
-      // Check if file exists
-      if (!fs.existsSync(document.filePath)) {
-        throw new AppError(404, 'File not found');
-      }
-
       // Set headers for file download
       res.setHeader('Content-Type', getMimeType(document.fileName));
       res.setHeader('Content-Disposition', `attachment; filename="${document.fileName}"`);
       
-      // Stream the file
-      const fileStream = fs.createReadStream(document.filePath);
-      fileStream.pipe(res);
-
-      // Handle errors in the stream
-      fileStream.on('error', (_error) => {
-        next(new AppError(500, 'Error reading file'));
-      });
+      // Stream the file from Google Cloud Storage
+      const bucket = this.documentService.getStorageBucket();
+      const file = bucket.file(document.filePath);
+      
+      file.createReadStream()
+        .on('error', (error: Error) => {
+          next(new AppError(500, `Error streaming file: ${error.message}`));
+        })
+        .pipe(res);
     } catch (error) {
       next(error);
     }
@@ -272,7 +274,17 @@ export class DocumentController {
       }
 
       const document = await this.documentService.updateDocumentStatus(id, status, errorDescription);
+      
+      // Send response immediately
       res.json(document);
+
+      // Process queued requests in the background
+      if (status === DocumentStatus.PROCESSED) {
+        this.rabbitMQService.publishMessage('document_processed', document.id)
+          .catch(error => {
+            console.error('Error publishing document processed message:', error);
+          });
+      }
     } catch (error) {
       next(error);
     }

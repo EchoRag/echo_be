@@ -188,8 +188,52 @@ export class ConversationController {
         conversation_id: conversation_id || ''
       };
 
-      const response = await this.conversationService.generateResponse(request, authHeader);
+      const response = await this.conversationService.generateResponse(request, authHeader, req.user.providerUid);
       res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * @swagger
+   * /api/v1/conversations/{conversationId}/history:
+   *   get:
+   *     summary: Get conversation history
+   *     tags: [Conversations]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: conversationId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     responses:
+   *       200:
+   *         description: List of messages in the conversation
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/ConversationMessage'
+   *       401:
+   *         description: Unauthorized
+   *       404:
+   *         description: Conversation not found
+   *       500:
+   *         description: Server error
+   */
+  getConversationHistory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user?.providerUid) {
+        throw new AppError(401, 'Unauthorized');
+      }
+
+      const { conversationId } = req.params;
+      const messages = await this.conversationService.getConversationHistory(conversationId, req.user.providerUid);
+      res.json(messages);
     } catch (error) {
       next(error);
     }

@@ -1,17 +1,45 @@
 import { EchoConfig } from '../models/echo-config.model';
 import { AppDataSource } from '../config/database';
+import { ConversationService } from './conversation.service';
 import axios from 'axios';
-
-interface GenerateRequest {
-  prompt: string;
-  model: string;
-  max_tokens: number;
-  temperature: number;
-  conversation_id: string;
-}
 
 export class ProxyServerService {
   private echoConfigRepository = AppDataSource.getRepository(EchoConfig);
+
+  async checkLLMServerHealth(): Promise<{ status: string; message: string; serverUrl?: string }> {
+    try {
+      const config = await this.echoConfigRepository.findOne({
+        where: { isActive: true }
+      });
+
+      if (!config) {
+        return {
+          status: 'error',
+          message: 'No active LLM server configuration found'
+        };
+      }
+
+      try {
+        await axios.get(`${config.llmServerUrl}/health`, { timeout: 5000 });
+        return {
+          status: 'ok',
+          message: 'LLM server is online',
+          serverUrl: config.llmServerUrl
+        };
+      } catch (error) {
+        return {
+          status: 'error',
+          message: 'LLM server is offline',
+          serverUrl: config.llmServerUrl
+        };
+      }
+    } catch (error) {
+      return {
+        status: 'error',
+        message: 'Failed to check LLM server status'
+      };
+    }
+  }
 
   async registerServer(llmServerUrl: string): Promise<EchoConfig> {
     // Reject localhost:8001
@@ -26,11 +54,14 @@ export class ProxyServerService {
     let config = await this.echoConfigRepository.findOne({
       where: { llmServerUrl }
     });
+    const conversationService = new ConversationService();
 
     if (config) {
       // Update existing config
       config.isActive = true;
-      return await this.echoConfigRepository.save(config);
+      const status = await this.echoConfigRepository.save(config);
+      conversationService.processQueuedRequests();
+      return status;
     }
 
     // Create new config
@@ -38,38 +69,8 @@ export class ProxyServerService {
       llmServerUrl,
       isActive: true
     });
-
-    return await this.echoConfigRepository.save(config);
-  }
-
-  async generateResponse(request: GenerateRequest, authHeader: string): Promise<any> {
-    // Get the active LLM server configuration
-    const config = await this.echoConfigRepository.findOne({
-      where: { isActive: true }
-    });
-
-    if (!config) {
-      throw new Error('No active LLM server configuration found');
-    }
-
-    try {
-      const response = await axios.post(
-        `${config.llmServerUrl}/generate`,
-        request,
-        {
-          headers: {
-            'Authorization': authHeader,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(`LLM server error: ${error.response?.data?.message || error.message}`);
-      }
-      throw error;
-    }
+    const status = await this.echoConfigRepository.save(config);
+    conversationService.processQueuedRequests();
+    return status;
   }
 } 

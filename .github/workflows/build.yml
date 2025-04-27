@@ -10,6 +10,9 @@ on:
 
 jobs:
   build:
+    environment:
+      name: 'version-${{ github.event.inputs.version }}'
+      url: 'https://console.cloud.google.com/artifacts/docker/echo-rag/asia-south1/echo/echo_be?authuser=0&project=echo-rag'
     runs-on: ubuntu-latest
     env:
       project: ${{ secrets.PROJECT_ID }}
@@ -39,16 +42,29 @@ jobs:
       - name: Install dependencies
         run: npm i
         
-      - name: Push docker image
+      - name: Bump version
         run: |
-          echo "Current package version: $(npm pkg get version)"
-          npm version ${{ github.event.inputs.version }} --no-git-tag-version
-          echo "Updated package version: $(npm pkg get version)"
-          npm run pushGcp
+          CURRENT_VERSION=$(npm pkg get version | tr -d '"')
+          NEW_VERSION=${{ github.event.inputs.version }}
+          echo "Current version: $CURRENT_VERSION"
+          echo "New version: $NEW_VERSION"
+          
+          if [ "$CURRENT_VERSION" != "$NEW_VERSION" ]; then
+            echo "Versions differ, updating to $NEW_VERSION"
+            npm version $NEW_VERSION --no-git-tag-version
+            echo "Updated package version: $(npm pkg get version)"
+          else
+            echo "Versions are the same, skipping version bump"
+          fi
+
+      - name: Push docker image
+        run: npm run pushGcp
   create-release:
+    environment:
+      name: 'version-${{ github.event.inputs.version }}'
+      url: 'https://github.com/EchoRag/echo_be/releases/tag/${{ github.event.inputs.version }}'
     needs: ['build']
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out the code
         uses: actions/checkout@v4

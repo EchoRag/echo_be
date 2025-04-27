@@ -15,13 +15,22 @@ import notificationRoutes from './routes/notification.routes';
 import proxyServerRoutes from './routes/proxyserver.routes';
 import { RabbitMQService } from './services/rabbitmq.service';
 import logger from './config/logger';
+import { ProxyServerService } from './services/proxyserver.service';
 
 const app = express();
 const rabbitMQService = new RabbitMQService();
 
+// CORS configuration
+const corsOptions = {
+  origin: ['http://localhost:5173', 'https://echo.keithfranklin.xyz'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  // allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+};
+
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(rateLimiter);
@@ -30,9 +39,36 @@ app.use(telemetryMiddleware);
 
 // Swagger Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.use('/health', (_req, res) => {
-  res.status(200).json({ status: 'OK' });
+app.use('/health', async(_req, res) => {
+  try {
+    const proxyServerService = new ProxyServerService();
+    const llmStatus = await proxyServerService.checkLLMServerHealth();
+    const docProc = {
+      status: 'error',
+      message: 'Document processing service is down.'
+    };
+    if(llmStatus.status === 'ok') {
+      docProc.status = 'ok';
+      docProc.message = 'Document processing service is online.';
+    }
+    
+    res.status(200).json({
+      status: 'OK',
+      dependencies: {
+        llmServer: llmStatus,
+        docProc: docProc
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'ERROR',
+      message: error.message
+    });
+  }
 });
+
+// Health check for dependent systems
+
 // Authentication
 // app.use(authenticateUser);
 // app.use(extractUser);
@@ -74,3 +110,4 @@ const initializeConnections = async () => {
 initializeConnections();
 
 export default app; 
+

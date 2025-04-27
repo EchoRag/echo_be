@@ -13,5 +13,6 @@ router.use(extractUser);
 router.get('/', conversationController.getConversations);
 router.post('/messages/:message_id/vote', conversationController.voteMessage);
 router.post('/generate', conversationController.generateResponse);
+router.get('/:conversationId/history', conversationController.getConversationHistory);
 
 export default router; 

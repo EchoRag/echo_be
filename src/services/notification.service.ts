@@ -72,6 +72,7 @@ export class NotificationService {
     documentId: string,
     projectId: string,
     status: DocumentStatus,
+    documentName: string,
     errorDescription?: string
   ): Promise<Notification> {
     let title: string;
@@ -81,7 +82,7 @@ export class NotificationService {
     switch (status) {
       case DocumentStatus.PROCESSED:
         title = 'Document Processed';
-        body = 'Your document has been successfully processed';
+        body = `"${documentName}" has been successfully processed`;
         type = NotificationType.DOCUMENT_PROCESSED;
         break;
       case DocumentStatus.ERROR:
@@ -91,7 +92,7 @@ export class NotificationService {
         break;
       default:
         title = 'Document Status Updated';
-        body = `Your document status has been updated to ${status}`;
+        body = `"${documentName}" status has been updated to ${status}`;
         type = NotificationType.SYSTEM;
     }
 
@@ -100,7 +101,7 @@ export class NotificationService {
       projectId,
       status,
       errorDescription,
-      link: `http://localhost:5173/project/${projectId}`
+      link: `${process.env.FE_URL}/projects/${projectId}`
     };
 
     return this.sendNotification(
@@ -149,8 +150,8 @@ export class NotificationService {
             notification: {
               title,
               body,
-              icon: 'https://your-app.com/icon.png',
-              badge: 'https://your-app.com/badge.png',
+              // icon: 'https://your-app.com/icon.png',
+              // badge: 'https://your-app.com/badge.png',
               actions: [
                 {
                   action: 'open',
@@ -159,13 +160,13 @@ export class NotificationService {
               ]
             },
             fcmOptions: {
-              link: data.link || 'http://localhost:5173'
+              link: data.link || `${process.env.FE_URL}`
             }
           },
           data: {
             notificationId: notification.id,
-            type,
-            ...data,
+            // type,
+            // ...data,
           },
         });
       }

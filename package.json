@@ -1,6 +1,6 @@
 {
   "name": "echo_be",
-  "version": "1.0.0",
+  "version": "0.0.2",
   "description": "Echo Backend Service",
   "main": "dist/server.js",
   "scripts": {
@@ -16,7 +16,11 @@
     "dockerTag": "docker tag echo_be:latest asia-south1-docker.pkg.dev/echo-rag/echo/echo_be:$npm_package_version",
     "prepushGcp": "npm run dockerTag",
     "pushGcp": "docker push asia-south1-docker.pkg.dev/echo-rag/echo/echo_be:$npm_package_version",
-    "test:version": "echo 'Testing version handling:' && echo 'Package version:' $npm_package_version && echo 'Docker tag:' asia-south1-docker.pkg.dev/echo-rag/echo/echo_be:$npm_package_version"
+    "test:version": "echo 'Testing version handling:' && echo 'Package version:' $npm_package_version && echo 'Docker tag:' asia-south1-docker.pkg.dev/echo-rag/echo/echo_be:$npm_package_version",
+    "typeorm": "typeorm-ts-node-commonjs",
+    "migration:generate": "npm run typeorm migration:generate -- -d src/config/database.ts",
+    "migration:run": "npm run typeorm migration:run -- -d src/config/database.ts",
+    "migration:revert": "npm run typeorm migration:revert -- -d src/config/database.ts"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +28,7 @@
   "dependencies": {
     "@clerk/clerk-sdk-node": "^4.0.0",
     "@clerk/express": "^1.3.56",
+    "@google-cloud/storage": "^7.16.0",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/auto-instrumentations-node": "^0.57.1",
     "@opentelemetry/sdk-node": "^0.200.0",
@@ -62,6 +67,8 @@
     "pm2": "^6.0.5",
     "supertest": "^6.3.3",
     "ts-jest": "^29.1.0",
-    "ts-node-dev": "^2.0.0"
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typeorm-ts-node-commonjs": "^0.3.20"
   }
 }

@@ -6,6 +6,12 @@ import axios from 'axios';
 export class ProxyServerService {
   private echoConfigRepository = AppDataSource.getRepository(EchoConfig);
 
+  async getActiveConfig(): Promise<EchoConfig | null> {
+    return await this.echoConfigRepository.findOne({
+      where: { isActive: true }
+    });
+  }
+
   async checkLLMServerHealth(): Promise<{ status: string; message: string; serverUrl?: string }> {
     try {
       const config = await this.echoConfigRepository.findOne({

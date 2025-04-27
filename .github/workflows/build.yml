@@ -10,6 +10,9 @@ on:
 
 jobs:
   build:
+    environment:
+      name: 'version-${{ github.event.inputs.version }}'
+      url: 'https://console.cloud.google.com/artifacts/docker/echo-rag/asia-south1/echo/echo_be?authuser=0&project=echo-rag'
     runs-on: ubuntu-latest
     env:
       project: ${{ secrets.PROJECT_ID }}
@@ -57,9 +60,11 @@ jobs:
       - name: Push docker image
         run: npm run pushGcp
   create-release:
+    environment:
+      name: 'version-${{ github.event.inputs.version }}'
+      url: 'https://github.com/EchoRag/echo_be/releases/tag/${{ github.event.inputs.version }}'
     needs: ['build']
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out the code
         uses: actions/checkout@v4

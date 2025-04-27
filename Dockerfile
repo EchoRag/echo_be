@@ -4,6 +4,8 @@ WORKDIR /usr/app
 
 COPY package.json .
 
+RUN mkdir uploads
+
 RUN npm i --production
 
 COPY ./dist .

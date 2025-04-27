@@ -125,7 +125,7 @@ export class DocumentController {
       
       // Stream the file from Google Cloud Storage
       const bucket = this.documentService.getStorageBucket();
-      const file = bucket.file(document.fileName);
+      const file = bucket.file(document.filePath);
       
       file.createReadStream()
         .on('error', (error: Error) => {

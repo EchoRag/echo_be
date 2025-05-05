@@ -9,5 +9,6 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
   collectCoverage: true,
   coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'cobertura'],
   coveragePathIgnorePatterns: ['/node_modules/', '/dist/'],
 }; 

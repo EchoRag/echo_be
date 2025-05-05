@@ -9,7 +9,21 @@ on:
         default: '0.1.0'
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: npm i
+      - name: Run tests
+        run: npm run test
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
   build:
+    needs: ['test']
     environment:
       name: 'version-${{ github.event.inputs.version }}'
       url: 'https://console.cloud.google.com/artifacts/docker/echo-rag/asia-south1/echo/echo_be?authuser=0&project=echo-rag'

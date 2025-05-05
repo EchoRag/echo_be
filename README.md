@@ -2,7 +2,7 @@
 
 [![Known Vulnerabilities](https://snyk.io/test/github/EchoRag/echo_fe/badge.svg)](https://snyk.io/test/github/EchoRag/echo_fe)
 
-
+[![codecov](https://codecov.io/gh/EchoRag/echo_be/graph/badge.svg?token=OH7UKUPQTZ)](https://codecov.io/gh/EchoRag/echo_be)
 
 
 

@@ -58,4 +58,5 @@ jobs:
           tag: ${{ github.event.inputs.version }}
         run: |
           gh release edit "$tag" \
-              --latest
+              --latest \
+              --prerelease=false

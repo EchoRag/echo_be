@@ -1,28 +1,29 @@
+import admin from 'firebase-admin';
 import { AppDataSource } from '../config/database';
 import { Notification, NotificationType } from '../models/notification.model';
 import { NotificationReceipt } from '../models/notification-receipt.model';
 import { DeviceToken } from '../models/device-token.model';
 import { DocumentStatus } from '../models/document.model';
 import { AppError } from '../utils/app-error';
-import * as admin from 'firebase-admin';
+import path from 'path';
 
 export class NotificationService {
   private static instance: NotificationService;
-  private notificationRepository = AppDataSource.getRepository(Notification);
-  private receiptRepository = AppDataSource.getRepository(NotificationReceipt);
-  private deviceTokenRepository = AppDataSource.getRepository(DeviceToken);
+  private NotificationRepository = AppDataSource.getRepository(Notification);
+  private NotificationReceiptRepository = AppDataSource.getRepository(NotificationReceipt);
+  private DeviceTokenRepository = AppDataSource.getRepository(DeviceToken);
+  private firebaseAdmin: admin.app.App;
 
-  private constructor() {
-    // Initialize Firebase Admin if not already initialized
-    if (!admin.apps.length) {
-      admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-        }),
-      });
+  constructor() {
+    let serviceAccountPath;
+    if (process.env.firebase) {
+      serviceAccountPath = JSON.parse(process.env.firebase);
+    } else {
+      serviceAccountPath = path.join(process.cwd(), 'creds', 'service.json');
     }
+    this.firebaseAdmin = admin.initializeApp({
+      credential: admin.credential.cert(serviceAccountPath)
+    });
   }
 
   public static getInstance(): NotificationService {
@@ -38,14 +39,14 @@ export class NotificationService {
     deviceType: string,
     deviceId: string
   ): Promise<DeviceToken> {
-    let deviceToken = await this.deviceTokenRepository.findOne({
+    let deviceToken = await this.DeviceTokenRepository.findOne({
       where: { userProviderUid, deviceId },
     });
 
     if (deviceToken) {
       deviceToken.fcmToken = fcmToken;
     } else {
-      deviceToken = this.deviceTokenRepository.create({
+      deviceToken = this.DeviceTokenRepository.create({
         userProviderUid,
         fcmToken,
         deviceType,
@@ -53,7 +54,7 @@ export class NotificationService {
       });
     }
 
-    return this.deviceTokenRepository.save(deviceToken);
+    return this.DeviceTokenRepository.save(deviceToken);
   }
 
   async sendDocumentStatusNotification(
@@ -109,31 +110,31 @@ export class NotificationService {
   ): Promise<Notification> {
     try {
       // Create and save notification
-      const notification = this.notificationRepository.create({
+      const notification = this.NotificationRepository.create({
         type,
         title,
         body,
         data,
         userProviderUid,
       });
-      const savedNotification = await this.notificationRepository.save(notification);
+      const savedNotification = await this.NotificationRepository.save(notification);
 
       // Create and save receipt
-      const receipt = this.receiptRepository.create({
+      const receipt = this.NotificationReceiptRepository.create({
         notificationId: savedNotification.id,
         userProviderUid,
         isRead: false,
       });
-      await this.receiptRepository.save(receipt);
+      await this.NotificationReceiptRepository.save(receipt);
 
       // Get user's FCM token
-      const deviceToken = await this.deviceTokenRepository.findOne({
+      const deviceToken = await this.DeviceTokenRepository.findOne({
         where: { userProviderUid },
       });
 
       if (deviceToken?.fcmToken) {
         // Send FCM notification
-        await admin.messaging().send({
+        await this.firebaseAdmin.messaging().send({
           token: deviceToken.fcmToken,
           notification: {
             title,
@@ -154,7 +155,7 @@ export class NotificationService {
   }
 
   async markAsRead(notificationId: string, userProviderUid: string): Promise<void> {
-    const receipt = await this.receiptRepository.findOne({
+    const receipt = await this.NotificationReceiptRepository.findOne({
       where: { notificationId, userProviderUid },
     });
 
@@ -164,7 +165,7 @@ export class NotificationService {
 
     receipt.isRead = true;
     receipt.readAt = new Date();
-    await this.receiptRepository.save(receipt);
+    await this.NotificationReceiptRepository.save(receipt);
   }
 
   async getUserNotifications(
@@ -174,7 +175,7 @@ export class NotificationService {
   ): Promise<{ notifications: Notification[]; total: number; page: number; limit: number }> {
     const skip = (page - 1) * limit;
 
-    const [notifications, total] = await this.notificationRepository.findAndCount({
+    const [notifications, total] = await this.NotificationRepository.findAndCount({
       where: { userProviderUid },
       relations: ['receipts'],
       order: { createdAt: 'DESC' },

@@ -28,7 +28,7 @@ export class RabbitMQService {
       }
 
       await this.channel!.assertQueue(queue, { durable: true });
-      this.channel!.sendToQueue(queue, Buffer.from(message));
+      await this.channel!.sendToQueue(queue, Buffer.from(message));
       console.log(`Message published to queue: ${queue}`);
     } catch (error) {
       console.error('Error publishing message to RabbitMQ:', error);
@@ -38,8 +38,12 @@ export class RabbitMQService {
 
   async close() {
     try {
-      await this.channel?.close();
-      await this.connection?.close();
+      if (this.channel) {
+        await this.channel.close();
+      }
+      if (this.connection) {
+        await this.connection.close();
+      }
       console.log('RabbitMQ connection closed');
     } catch (error) {
       console.error('Error closing RabbitMQ connection:', error);

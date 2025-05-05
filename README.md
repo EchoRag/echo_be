@@ -1,5 +1,11 @@
 # Echo Backend Service
 
+[![Known Vulnerabilities](https://snyk.io/test/github/EchoRag/echo_fe/badge.svg)](https://snyk.io/test/github/EchoRag/echo_fe)
+
+
+
+
+
 A Node.js + TypeScript + Express backend service with PostgreSQL, Clerk authentication, and Swagger documentation.
 
 ## Prerequisites

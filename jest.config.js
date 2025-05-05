@@ -10,5 +10,4 @@ module.exports = {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   coveragePathIgnorePatterns: ['/node_modules/', '/dist/'],
-  setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts'],
 }; 

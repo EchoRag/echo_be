@@ -2,29 +2,27 @@ import { AppDataSource } from '../config/database';
 import { Notification, NotificationType } from '../models/notification.model';
 import { NotificationReceipt } from '../models/notification-receipt.model';
 import { DeviceToken } from '../models/device-token.model';
+import { DocumentStatus } from '../models/document.model';
 import { AppError } from '../utils/app-error';
 import * as admin from 'firebase-admin';
-import path from 'path';
-import { DocumentStatus } from '../models/document.model';
 
 export class NotificationService {
   private static instance: NotificationService;
   private notificationRepository = AppDataSource.getRepository(Notification);
   private receiptRepository = AppDataSource.getRepository(NotificationReceipt);
   private deviceTokenRepository = AppDataSource.getRepository(DeviceToken);
-  private firebaseAdmin: admin.app.App;
 
   private constructor() {
-    // Initialize Firebase Admin with service account file
-    let serviceAccountPath;
-    if (process.env.firebase) {
-      serviceAccountPath = JSON.parse(process.env.firebase);
-    } else {
-      serviceAccountPath = path.join(process.cwd(), 'creds', 'service.json');
+    // Initialize Firebase Admin if not already initialized
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        }),
+      });
     }
-    this.firebaseAdmin = admin.initializeApp({
-      credential: admin.credential.cert(serviceAccountPath)
-    });
   }
 
   public static getInstance(): NotificationService {
@@ -37,34 +35,25 @@ export class NotificationService {
   async registerDeviceToken(
     userProviderUid: string,
     fcmToken: string,
-    deviceType?: string,
-    deviceId?: string
+    deviceType: string,
+    deviceId: string
   ): Promise<DeviceToken> {
-    // Check if token already exists for this device
-    const existingToken = await this.deviceTokenRepository.findOne({
-      where: [
-        { userProviderUid, fcmToken },
-        { userProviderUid, deviceId }
-      ]
+    let deviceToken = await this.deviceTokenRepository.findOne({
+      where: { userProviderUid, deviceId },
     });
 
-    if (existingToken) {
-      // Update existing token
-      existingToken.fcmToken = fcmToken;
-      existingToken.deviceType = deviceType;
-      existingToken.deviceId = deviceId;
-      return await this.deviceTokenRepository.save(existingToken);
+    if (deviceToken) {
+      deviceToken.fcmToken = fcmToken;
+    } else {
+      deviceToken = this.deviceTokenRepository.create({
+        userProviderUid,
+        fcmToken,
+        deviceType,
+        deviceId,
+      });
     }
 
-    // Create new token
-    const deviceToken = this.deviceTokenRepository.create({
-      userProviderUid,
-      fcmToken,
-      deviceType,
-      deviceId
-    });
-
-    return await this.deviceTokenRepository.save(deviceToken);
+    return this.deviceTokenRepository.save(deviceToken);
   }
 
   async sendDocumentStatusNotification(
@@ -78,39 +67,37 @@ export class NotificationService {
     let title: string;
     let body: string;
     let type: NotificationType;
+    let data: any;
 
     switch (status) {
       case DocumentStatus.PROCESSED:
         title = 'Document Processed';
         body = `"${documentName}" has been successfully processed`;
         type = NotificationType.DOCUMENT_PROCESSED;
+        data = {
+          documentId,
+          projectId,
+          status,
+          link: `${process.env.FE_URL}/projects/${projectId}`,
+        };
         break;
       case DocumentStatus.ERROR:
         title = 'Document Processing Failed';
-        body = errorDescription || 'There was an error processing your document';
+        body = errorDescription || 'An error occurred while processing the document';
         type = NotificationType.DOCUMENT_ERROR;
+        data = {
+          documentId,
+          projectId,
+          status,
+          errorDescription,
+          link: `${process.env.FE_URL}/projects/${projectId}`,
+        };
         break;
       default:
-        title = 'Document Status Updated';
-        body = `"${documentName}" status has been updated to ${status}`;
-        type = NotificationType.SYSTEM;
+        throw new AppError(400, 'Invalid document status');
     }
 
-    const data = {
-      documentId,
-      projectId,
-      status,
-      errorDescription,
-      link: `${process.env.FE_URL}/projects/${projectId}`
-    };
-
-    return this.sendNotification(
-      userProviderUid,
-      title,
-      body,
-      type,
-      data
-    );
+    return this.sendNotification(userProviderUid, title, body, type, data);
   }
 
   async sendNotification(
@@ -118,10 +105,10 @@ export class NotificationService {
     title: string,
     body: string,
     type: NotificationType = NotificationType.SYSTEM,
-    data: Record<string, any> = {}
+    data: any = {}
   ): Promise<Notification> {
     try {
-      // Create notification record
+      // Create and save notification
       const notification = this.notificationRepository.create({
         type,
         title,
@@ -129,49 +116,37 @@ export class NotificationService {
         data,
         userProviderUid,
       });
-      await this.notificationRepository.save(notification);
+      const savedNotification = await this.notificationRepository.save(notification);
 
-      // Create receipt
+      // Create and save receipt
       const receipt = this.receiptRepository.create({
-        notificationId: notification.id,
+        notificationId: savedNotification.id,
         userProviderUid,
         isRead: false,
       });
       await this.receiptRepository.save(receipt);
 
       // Get user's FCM token
-      const fcmToken = await this.getUserFcmToken(userProviderUid);
+      const deviceToken = await this.deviceTokenRepository.findOne({
+        where: { userProviderUid },
+      });
 
-      if (fcmToken) {
-        // Send web push notification
-        await this.firebaseAdmin.messaging().send({
-          token: fcmToken,
-          webpush: {
-            notification: {
-              title,
-              body,
-              // icon: 'https://your-app.com/icon.png',
-              // badge: 'https://your-app.com/badge.png',
-              actions: [
-                {
-                  action: 'open',
-                  title: 'View'
-                }
-              ]
-            },
-            fcmOptions: {
-              link: data.link || `${process.env.FE_URL}`
-            }
+      if (deviceToken?.fcmToken) {
+        // Send FCM notification
+        await admin.messaging().send({
+          token: deviceToken.fcmToken,
+          notification: {
+            title,
+            body,
           },
           data: {
-            notificationId: notification.id,
-            // type,
-            // ...data,
+            ...data,
+            type: type.toString(),
           },
         });
       }
 
-      return notification;
+      return savedNotification;
     } catch (error) {
       console.error('Error sending notification:', error);
       throw new AppError(500, 'Failed to send notification');
@@ -180,10 +155,7 @@ export class NotificationService {
 
   async markAsRead(notificationId: string, userProviderUid: string): Promise<void> {
     const receipt = await this.receiptRepository.findOne({
-      where: {
-        notificationId,
-        userProviderUid,
-      },
+      where: { notificationId, userProviderUid },
     });
 
     if (!receipt) {
@@ -214,15 +186,7 @@ export class NotificationService {
       notifications,
       total,
       page,
-      limit
+      limit,
     };
-  }
-
-  private async getUserFcmToken(userProviderUid: string): Promise<string | null> {
-    const deviceToken = await this.deviceTokenRepository.findOne({
-      where: { userProviderUid },
-      order: { createdAt: 'DESC' }
-    });
-    return deviceToken?.fcmToken || null;
   }
 } 

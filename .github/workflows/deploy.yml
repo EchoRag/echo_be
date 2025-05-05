@@ -42,3 +42,18 @@ jobs:
             --add-volume-mount=volume=creds,mount-path=/usr/app/creds
         env:
           ENV_FILE: ${{ secrets.APP_ENV }}
+      
+  post-deploy:
+    environment:
+      name: 'version-${{ github.event.inputs.version }}'
+      url: 'https://github.com/EchoRag/echo_be/releases/tag/${{ github.event.inputs.version }}'
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.event.inputs.version }}
+        run: |
+          gh release edit "$tag" \
+              --latest

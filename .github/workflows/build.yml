@@ -22,6 +22,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          slug: EchoRag/echo_be
   build:
     needs: ['test']
     environment:

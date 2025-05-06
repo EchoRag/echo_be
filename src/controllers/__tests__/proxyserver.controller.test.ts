@@ -39,7 +39,6 @@ describe('ProxyServerController', () => {
     // Setup mock service
     mockProxyServerService = {
       registerServer: jest.fn(),
-      getActiveConfig: jest.fn(),
     } as unknown as jest.Mocked<ProxyServerService>;
 
     // Mock ProxyServerService constructor
@@ -126,13 +125,6 @@ describe('ProxyServerController', () => {
   });
 
   describe('startServer', () => {
-    const mockConfig = {
-      id: 'test-config-id',
-      llmServerUrl: 'http://test-server.com',
-      isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
 
     beforeEach(() => {
       // Mock environment variables
@@ -146,7 +138,6 @@ describe('ProxyServerController', () => {
         'x-recaptcha-token': 'valid-token',
       };
 
-      mockProxyServerService.getActiveConfig.mockResolvedValue(mockConfig);
       (axios.post as jest.Mock).mockResolvedValue({ data: 'success' });
 
       await proxyServerController.startServer(
@@ -166,7 +157,7 @@ describe('ProxyServerController', () => {
           }
         }
       });
-      expect(mockProxyServerService.getActiveConfig).toHaveBeenCalled();
+
       expect(axios.post).toHaveBeenCalledWith('http://webhook-url.com');
       expect(mockResponse.json).toHaveBeenCalledWith({
         status: 'success',
@@ -183,7 +174,6 @@ describe('ProxyServerController', () => {
         nextFunction
       );
 
-      expect(mockProxyServerService.getActiveConfig).not.toHaveBeenCalled();
       expect(nextFunction).toHaveBeenCalledWith(
         expect.any(AppError)
       );
@@ -205,8 +195,6 @@ describe('ProxyServerController', () => {
         mockResponse as Response,
         nextFunction
       );
-
-      expect(mockProxyServerService.getActiveConfig).not.toHaveBeenCalled();
       expect(nextFunction).toHaveBeenCalledWith(
         expect.any(AppError)
       );
@@ -227,7 +215,6 @@ describe('ProxyServerController', () => {
         nextFunction
       );
 
-      expect(mockProxyServerService.getActiveConfig).not.toHaveBeenCalled();
       expect(nextFunction).toHaveBeenCalledWith(
         expect.any(AppError)
       );
@@ -235,33 +222,12 @@ describe('ProxyServerController', () => {
       expect(nextFunction.mock.calls[0][0].message).toBe('Failed to verify reCAPTCHA token');
     });
 
-    it('should handle no active configuration', async () => {
-      mockRequest.headers = {
-        'x-recaptcha-token': 'valid-token',
-      };
-
-      mockProxyServerService.getActiveConfig.mockResolvedValue(null);
-
-      await proxyServerController.startServer(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      );
-
-      expect(mockProxyServerService.getActiveConfig).toHaveBeenCalled();
-      expect(nextFunction).toHaveBeenCalledWith(
-        expect.any(AppError)
-      );
-      expect(nextFunction.mock.calls[0][0].statusCode).toBe(404);
-      expect(nextFunction.mock.calls[0][0].message).toBe('No active LLM server configuration found');
-    });
 
     it('should handle webhook failure', async () => {
       mockRequest.headers = {
         'x-recaptcha-token': 'valid-token',
       };
 
-      mockProxyServerService.getActiveConfig.mockResolvedValue(mockConfig);
       (axios.post as jest.Mock).mockRejectedValue(new Error('Webhook failed'));
 
       await proxyServerController.startServer(
@@ -270,7 +236,6 @@ describe('ProxyServerController', () => {
         nextFunction
       );
 
-      expect(mockProxyServerService.getActiveConfig).toHaveBeenCalled();
       expect(axios.post).toHaveBeenCalledWith('http://webhook-url.com');
       expect(nextFunction).toHaveBeenCalledWith(
         expect.any(AppError)

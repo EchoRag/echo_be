@@ -51,10 +51,6 @@ export class ProxyServerController {
       } catch (error) {
         throw new AppError(400, 'Failed to verify reCAPTCHA token');
       }
-      const config = await this.proxyServerService.getActiveConfig();
-      if (!config) {
-        throw new AppError(404, 'No active LLM server configuration found');
-      }
 
       // Call the webhook to start the server
       try {

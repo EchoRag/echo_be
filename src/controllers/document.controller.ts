@@ -289,4 +289,40 @@ export class DocumentController {
       next(error);
     }
   };
+
+  /**
+   * @swagger
+   * /api/v1/document/{id}/reprocess:
+   *   post:
+   *     summary: Reprocess a document
+   *     tags: [Documents]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *     responses:
+   *       200:
+   *         description: Document queued for reprocessing
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Document'
+   */
+  reprocessDocument = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const document = await this.documentService.getDocumentById(id);
+      
+      // Publish document ID to RabbitMQ for reprocessing
+      await this.rabbitMQService.publishMessage('document_uploaded', document.id);
+      
+      res.json({ message: 'Document queued for reprocessing', document });
+    } catch (error) {
+      next(error);
+    }
+  };
 } 

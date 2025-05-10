@@ -60,4 +60,9 @@ router.delete('/:id',
   documentController.deleteDocument
 );
 
+router.post('/:id/reprocess',
+  authenticateUser,
+  documentController.reprocessDocument
+);
+
 export default router; 

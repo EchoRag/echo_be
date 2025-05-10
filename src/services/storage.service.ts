@@ -1,7 +1,7 @@
 import { Storage } from '@google-cloud/storage';
-import { AppError } from '../utils/app-error';
 import path from 'path';
 import fs from 'fs';
+import { AppError } from '../utils/app-error';
 import { getMimeType } from '../utils/mime-type.util';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -38,7 +38,6 @@ export class StorageService {
       const uniqueFileName = `${uuidv4()}${fileExtension}`;
       
       const bucket = this.storage.bucket(this.bucket);
-      bucket.file(uniqueFileName);
       await bucket.upload(filePath, {
         destination: uniqueFileName,
         metadata: {
@@ -66,6 +65,18 @@ export class StorageService {
     }
   }
 
+  async deleteFiles(filePaths: string[]): Promise<void> {
+    const bucket = this.storage.bucket(this.bucket);
+
+    const deletePromises = filePaths.map((filePath) => {
+      return bucket.file(filePath).delete().catch((err) => {
+        console.error(`Error deleting file ${filePath}:`, err.message);
+      });
+    });
+
+    await Promise.all(deletePromises);
+  }
+
   async getSignedUrl(fileName: string, expiresIn: number = 3600): Promise<string> {
     try {
       const bucket = this.storage.bucket(this.bucket);
@@ -84,4 +95,4 @@ export class StorageService {
   getBucket() {
     return this.storage.bucket(this.bucket);
   }
-} 
+}
